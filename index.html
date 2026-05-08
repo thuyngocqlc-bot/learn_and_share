@@ -28,24 +28,23 @@
     <h2>L&S - BÁO CÁO CHIA SẺ</h2>
     <div style="font-size: 0.8rem; color: #555; background: #fff3e0; border-left: 4px solid var(--primary); padding: 10px; margin-bottom: 20px; line-height: 1.5; border-radius: 4px;">
         📌 <b>Lưu ý từ K&G:</b><br>
-        • Danh sách nhân sự (Mục 1, 2, 3) cần vài giây để hiển thị.<br>
-        • Hệ thống mới tự động tối ưu đường truyền cho file video lớn.<br>
-        • Ghi nhận tri thức: Học viện trân trọng mọi đóng góp.
+        • Danh sách nhân sự cần vài giây để hiển thị.<br>
+        • Vui lòng chờ file video tải xong 100% trước khi thoát.
     </div>
     <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
     <div class="form-group"><label>2. Khu vực/Phòng ban/Quản lý:</label><select id="pbc2"></select></div>
     <div class="form-group"><label>3. Thông tin nhân sự THỰC HIỆN chia sẻ:</label><select id="nhanSu"></select></div>
     <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
     <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung chính..."></textarea></div>
-    <div class="form-group"><label>6. File đính kèm (Video/audio không quá 1,5GB):</label><input type="file" id="fileInput"></div>
+    <div class="form-group"><label>6. File đính kèm (Dưới 1,5GB):</label><input type="file" id="fileInput"></div>
     <div class="form-group">
         <label>7. Tự phân loại và đánh giá nội dung chia sẻ:</label>
         <select id="phanLoai">
             <option value="">-- Chọn đánh giá --</option>
-            <option value="1. Dữ liệu nội bộ cần bảo mật">1. Dữ liệu nội bộ cần bảo mật</option>
+            <option value="1. Dữ liệu nội bộ bảo mật">1. Dữ liệu nội bộ bảo mật</option>
             <option value="2. Xuất sắc, cần lan tỏa">2. Xuất sắc, cần lan tỏa</option>
-            <option value="3. Hữu ích - Có giá trị tham khảo">3. Hữu ích - Có giá trị tham khảo</option>
-            <option value="4. Bình thường - ghi nhận chia sẻ">4. Bình thường - ghi nhận chia sẻ</option>
+            <option value="3. Hữu ích - Tham khảo">3. Hữu ích - Tham khảo</option>
+            <option value="4. Bình thường - ghi nhận">4. Bình thường - ghi nhận</option>
         </select>
     </div>
     <div id="progressContainer"><div id="progressBar"></div></div>
@@ -55,7 +54,8 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyb3o52LA-X8QNecybwtpYbTV5wAJ4CIPoGH5V17NS-S9T9sy77KHQL5TeeVnVmvUxjFA/exec";
+    // DÁN LINK WEB APP CỦA BẠN VÀO ĐÂY
+    const API_URL = "https://script.google.com/macros/s/AKfycbxxW17BtmZKzgOJwj4wyNBQkcRFLYCuMTj6Qj8MbtxOwOHRfNBP-y7ZmXxJ-9ERd2iznQ/exec";
     let allData = [];
     let ss1, ss2, ss3;
 
@@ -68,7 +68,7 @@
             allData = await res.json();
             const list1 = [...new Set(allData.map(r => r[0]))].filter(String).sort();
             ss1.setData([{text: '-- Chọn Kênh --', value: ''}, ...list1.map(i => ({text: i, value: i}))]);
-        } catch (e) { console.log("Lỗi tải danh mục"); }
+        } catch (e) { console.error("Lỗi tải danh mục"); }
     };
 
     function updatePBC2(val) {
@@ -81,7 +81,7 @@
         if (!val) return ss3.setData([{text: '-- Chọn --', value: ''}]);
         const pbc1Val = document.getElementById('pbc1').value;
         const list3 = [...new Set(allData.filter(r => r[0] === pbc1Val && r[1] === val).map(r => r[2]))].filter(String).sort();
-        ss3.setData([{text: '-- Chọn đúng tên mình để được ghi nhận --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
+        ss3.setData([{text: '-- Chọn tên mình --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
     }
 
     function calculateMD5(file) {
@@ -106,51 +106,68 @@
         const file = fileInput.files[0];
         const btn = document.getElementById('btnSubmit');
         const bar = document.getElementById('progressBar');
-        const nhanSu = document.getElementById('nhanSu').value;
-        const ngay = document.getElementById('ngay').value;
-        const noiDung = document.getElementById('noiDung').value.trim();
-        const phanLoai = document.getElementById('phanLoai').value;
-        const pbc1 = document.getElementById('pbc1').value;
-        const pbc2 = document.getElementById('pbc2').value;
+        
+        const fields = {
+            nhanSu: document.getElementById('nhanSu').value,
+            ngay: document.getElementById('ngay').value,
+            noiDung: document.getElementById('noiDung').value.trim(),
+            phanLoai: document.getElementById('phanLoai').value,
+            pbc1: document.getElementById('pbc1').value,
+            pbc2: document.getElementById('pbc2').value
+        };
 
-        if(!file || !nhanSu || !ngay || !noiDung || !phanLoai) return alert("Vui lòng điền đủ thông tin!");
+        if(!file || !fields.nhanSu || !fields.ngay || !fields.noiDung || !fields.phanLoai) return alert("Vui lòng điền đủ thông tin!");
 
         btn.disabled = true;
-        btn.innerText = "ĐANG TÍNH TOÁN MD5...";
+        btn.innerText = "ĐANG KIỂM TRA FILE...";
         document.getElementById('progressContainer').style.display = 'block';
 
         try {
             const md5 = await calculateMD5(file);
-            btn.innerText = "ĐANG GHI LOG...";
+            btn.innerText = "ĐANG GHI NHẬN LOG...";
+            
             const initRes = await fetch(API_URL, { 
                 method: 'POST', 
-                body: JSON.stringify({ fileName: file.name, fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB", pbc1: pbc1, pbc2: pbc2, nhanSu: nhanSu, ngayChiaSe: ngay, noiDungChinh: noiDung, phanLoai: phanLoai, md5: md5 }) 
+                body: JSON.stringify({ 
+                    fileName: file.name, fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
+                    pbc1: fields.pbc1, pbc2: fields.pbc2, nhanSu: fields.nhanSu,
+                    ngayChiaSe: fields.ngay, noiDungChinh: fields.noiDung, phanLoai: fields.phanLoai, md5: md5
+                }) 
             });
             const config = await initRes.json();
-            if (config.error || !config.uploadUrl) throw new Error(config.error || "Lỗi khởi tạo luồng tải.");
+            if (!config.uploadUrl) throw new Error("Khởi tạo thất bại.");
 
+            // Tải file dùng XHR (để theo dõi % chính xác nhất cho file lớn)
             const xhr = new XMLHttpRequest();
             xhr.open("PUT", config.uploadUrl, true);
+            
             xhr.upload.onprogress = (e) => {
                 if (e.lengthComputable) {
                     const pct = Math.round((e.loaded / e.total) * 100);
                     bar.style.width = pct + '%';
-                    btn.innerText = `ĐANG TẢI FILE: ${pct}%`;
+                    btn.innerText = `ĐANG TẢI: ${pct}%`;
                 }
             };
+
             xhr.onload = async () => {
                 if (xhr.status === 200 || xhr.status === 201) {
                     const fileId = JSON.parse(xhr.response).id;
-                    btn.innerText = "ĐANG XÁC NHẬN...";
-                    try {
-                        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'finishUpload', row: config.row, fileId: fileId }) });
-                        alert("THÀNH CÔNG!");
-                        window.location.href = "../index.html";
-                    } catch (e) { window.location.href = "../index.html"; }
-                } else { alert("Lỗi tải file."); btn.disabled = false; }
+                    btn.innerText = "ĐANG HOÀN TẤT...";
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'finishUpload', row: config.row, fileId: fileId })
+                    });
+                    alert("CHÚC MỪNG! THÀNH CÔNG.");
+                    window.location.href = "../index.html";
+                } else {
+                    alert("Lỗi tải file lên Drive (Mã: " + xhr.status + "). Admin đã ghi nhận thông tin chữ.");
+                }
             };
             xhr.send(file);
-        } catch (err) { alert("Lỗi: " + err.message); btn.disabled = false; }
+        } catch (err) {
+            alert("Lỗi hệ thống: " + err.message);
+            btn.disabled = false;
+        }
     }
 </script>
 </body>
