@@ -1,3 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>L&S Báo Cáo | Aristino Academy</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
+    <style>
+        :root { --primary: #FB8C00; --green: #1D713A; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #f2f2f2; padding: 10px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        .container { width: 100%; max-width: 480px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-top: 20px; }
+        h2 { color: var(--green); text-align: center; margin-bottom: 20px; font-size: 1.5rem; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; }
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.85rem; color: #444; }
+        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        #progressContainer { display: none; margin: 20px 0; background: #eee; border-radius: 10px; height: 12px; overflow: hidden; }
+        #progressBar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s; }
+        #btnSubmit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; margin-bottom: 15px; }
+        #btnSubmit:disabled { background: #ccc; cursor: not-allowed; }
+        .back-home { display: block; text-align: center; color: var(--green); text-decoration: none; font-weight: bold; font-size: 0.9rem; margin-top: 10px; }
+        .footer-text { text-align: center; margin-top: 20px; color: #999; font-size: 0.75rem; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>L&S - BÁO CÁO CHIA SẺ</h2>
+    <div style="font-size: 0.8rem; color: #555; background: #fff3e0; border-left: 4px solid var(--primary); padding: 10px; margin-bottom: 20px; line-height: 1.5; border-radius: 4px;">
+        📌 <b>Lưu ý từ K&G:</b><br>
+        • Danh sách nhân sự (Mục 1, 2, 3) cần vài giây để hiển thị.<br>
+        • Hệ thống mới tự động tối ưu đường truyền cho file video lớn.<br>
+        • Ghi nhận tri thức: Học viện trân trọng mọi đóng góp.
+    </div>
+    <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
+    <div class="form-group"><label>2. Khu vực/Phòng ban/Quản lý:</label><select id="pbc2"></select></div>
+    <div class="form-group"><label>3. Thông tin nhân sự THỰC HIỆN chia sẻ:</label><select id="nhanSu"></select></div>
+    <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
+    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung chính..."></textarea></div>
+    <div class="form-group"><label>6. File đính kèm (Video/audio không quá 1,5GB):</label><input type="file" id="fileInput"></div>
+    <div class="form-group">
+        <label>7. Tự phân loại và đánh giá nội dung chia sẻ:</label>
+        <select id="phanLoai">
+            <option value="">-- Chọn đánh giá --</option>
+            <option value="1. Dữ liệu nội bộ cần bảo mật">1. Dữ liệu nội bộ cần bảo mật</option>
+            <option value="2. Xuất sắc, cần lan tỏa">2. Xuất sắc, cần lan tỏa</option>
+            <option value="3. Hữu ích - Có giá trị tham khảo">3. Hữu ích - Có giá trị tham khảo</option>
+            <option value="4. Bình thường - ghi nhận chia sẻ">4. Bình thường - ghi nhận chia sẻ</option>
+        </select>
+    </div>
+    <div id="progressContainer"><div id="progressBar"></div></div>
+    <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
+    <a href="../index.html" class="back-home">⬅ Quay lại trang chủ Hub</a>
+    <div class="footer-text">Hệ thống thông tin Learn & Share - Aristino Academy</div>
+</div>
+
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyb3o52LA-X8QNecybwtpYbTV5wAJ4CIPoGH5V17NS-S9T9sy77KHQL5TeeVnVmvUxjFA/exec";
     let allData = [];
@@ -7,15 +63,12 @@
         ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Chọn Kênh/Khối' }, events: { afterChange: v => updatePBC2(v[0].value) } });
         ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Chọn Phòng ban' }, events: { afterChange: v => updateNhanSu(v[0].value) } });
         ss3 = new SlimSelect({ select: '#nhanSu', settings: { placeholderText: 'Tìm tên hoặc mã NV...' } });
-
         try {
             const res = await fetch(`${API_URL}?action=getDanhMuc`);
             allData = await res.json();
             const list1 = [...new Set(allData.map(r => r[0]))].filter(String).sort();
             ss1.setData([{text: '-- Chọn Kênh --', value: ''}, ...list1.map(i => ({text: i, value: i}))]);
-        } catch (e) {
-            console.log("Lỗi tải danh mục");
-        }
+        } catch (e) { console.log("Lỗi tải danh mục"); }
     };
 
     function updatePBC2(val) {
@@ -53,7 +106,6 @@
         const file = fileInput.files[0];
         const btn = document.getElementById('btnSubmit');
         const bar = document.getElementById('progressBar');
-        
         const nhanSu = document.getElementById('nhanSu').value;
         const ngay = document.getElementById('ngay').value;
         const noiDung = document.getElementById('noiDung').value.trim();
@@ -61,9 +113,7 @@
         const pbc1 = document.getElementById('pbc1').value;
         const pbc2 = document.getElementById('pbc2').value;
 
-        if(!file || !nhanSu || !ngay || !noiDung || !phanLoai) {
-            return alert("Vui lòng điền đầy đủ thông tin từ mục 1 đến mục 7!");
-        }
+        if(!file || !nhanSu || !ngay || !noiDung || !phanLoai) return alert("Vui lòng điền đủ thông tin!");
 
         btn.disabled = true;
         btn.innerText = "ĐANG TÍNH TOÁN MD5...";
@@ -72,28 +122,15 @@
         try {
             const md5 = await calculateMD5(file);
             btn.innerText = "ĐANG GHI LOG...";
-            
             const initRes = await fetch(API_URL, { 
                 method: 'POST', 
-                body: JSON.stringify({ 
-                    fileName: file.name,
-                    fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
-                    pbc1: pbc1,
-                    pbc2: pbc2,
-                    nhanSu: nhanSu,
-                    ngayChiaSe: ngay,
-                    noiDungChinh: noiDung,
-                    phanLoai: phanLoai,
-                    md5: md5
-                }) 
+                body: JSON.stringify({ fileName: file.name, fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB", pbc1: pbc1, pbc2: pbc2, nhanSu: nhanSu, ngayChiaSe: ngay, noiDungChinh: noiDung, phanLoai: phanLoai, md5: md5 }) 
             });
-            
             const config = await initRes.json();
             if (config.error || !config.uploadUrl) throw new Error(config.error || "Lỗi khởi tạo luồng tải.");
 
             const xhr = new XMLHttpRequest();
             xhr.open("PUT", config.uploadUrl, true);
-            
             xhr.upload.onprogress = (e) => {
                 if (e.lengthComputable) {
                     const pct = Math.round((e.loaded / e.total) * 100);
@@ -101,42 +138,20 @@
                     btn.innerText = `ĐANG TẢI FILE: ${pct}%`;
                 }
             };
-
             xhr.onload = async () => {
                 if (xhr.status === 200 || xhr.status === 201) {
-                    const response = JSON.parse(xhr.response);
-                    const fileId = response.id;
+                    const fileId = JSON.parse(xhr.response).id;
                     btn.innerText = "ĐANG XÁC NHẬN...";
-
                     try {
-                        await fetch(API_URL, {
-                            method: 'POST',
-                            body: JSON.stringify({ action: 'finishUpload', row: config.row, fileId: fileId })
-                        });
-                        alert("BÁO CÁO VÀ FILE ĐÃ ĐƯỢC GỬI THÀNH CÔNG!");
+                        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'finishUpload', row: config.row, fileId: fileId }) });
+                        alert("THÀNH CÔNG!");
                         window.location.href = "../index.html";
-                    } catch (e) {
-                        alert("File đã lên 100%. Hệ thống đang xử lý link, bạn có thể đóng trang.");
-                        window.location.href = "../index.html";
-                    }
-                } else {
-                    alert("Lỗi tải file (Mã: " + xhr.status + "). Vui lòng thử lại.");
-                    btn.disabled = false;
-                }
+                    } catch (e) { window.location.href = "../index.html"; }
+                } else { alert("Lỗi tải file."); btn.disabled = false; }
             };
-
-            xhr.onerror = () => {
-                alert("Mất kết nối mạng khi đang tải.");
-                btn.disabled = false;
-            };
-
             xhr.send(file);
-            
-        } catch (err) {
-            alert("Lỗi: " + err.message);
-            btn.disabled = false;
-            btn.innerText = "GỬI BÁO CÁO";
-        }
+        } catch (err) { alert("Lỗi: " + err.message); btn.disabled = false; }
     }
-</script> </body>
+</script>
+</body>
 </html>
