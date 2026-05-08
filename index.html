@@ -173,36 +173,40 @@
             };
 
             xhr.onload = async () => {
+                // Kiểm tra nếu trạng thái là 200 (Thành công) hoặc 201 (Đã tạo)
                 if (xhr.status === 200 || xhr.status === 201) {
-                    const fileId = JSON.parse(xhr.response).id;
+                    const response = JSON.parse(xhr.response);
+                    const fileId = response.id;
                     
-                    // Bước 4: Xác nhận hoàn tất để hệ thống gắn link file vào Sheet
-                    await fetch(API_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ action: 'finishUpload', row: config.row, fileId: fileId })
-                    });
+                    btn.innerText = "ĐANG XÁC NHẬN CUỐI CÙNG...";
 
-                    alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
-                    window.location.href = "../index.html";
+                    try {
+                        // Bước xác nhận để gắn Link vào Sheet
+                        await fetch(API_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({ 
+                                action: 'finishUpload', 
+                                row: config.row, 
+                                fileId: fileId 
+                            })
+                        });
+                        
+                        alert("BÁO CÁO VÀ FILE ĐÃ ĐƯỢC GỬI THÀNH CÔNG!");
+                        window.location.href = "../index.html";
+                    } catch (confirmErr) {
+                        // Nếu file đã lên Drive (100%) nhưng lệnh xác nhận lỗi mạng
+                        // Thì vẫn báo thành công cho người dùng, Admin sẽ check sau.
+                        console.log("Lỗi xác nhận nhưng file đã lên Drive:", confirmErr);
+                        alert("File đã tải lên thành công 100%. Hệ thống đang xử lý link, bạn có thể yên tâm đóng trang.");
+                        window.location.href = "../index.html";
+                    }
                 } else {
-                    alert("Lỗi tải file lên Drive. Tuy nhiên thông tin chữ đã được lưu lại.");
+                    // Nếu không phải 200/201 thì mới báo lỗi tải file
+                    alert("Lỗi tải file (Mã lỗi: " + xhr.status + "). Vui lòng thử lại hoặc liên hệ Admin.");
                     btn.disabled = false;
+                    btn.innerText = "GỬI LẠI FILE";
                 }
             };
-
-            xhr.onerror = () => {
-                alert("Lỗi kết nối mạng. Vui lòng kiểm tra lại đường truyền.");
-                btn.disabled = false;
-            };
-
-            xhr.send(file);
-            
-        } catch (err) {
-            alert("Đã xảy ra lỗi: " + err.message);
-            btn.disabled = false;
-            btn.innerText = "GỬI LẠI BÁO CÁO";
-        }
-    }
 </script>
 </body>
 </html>
