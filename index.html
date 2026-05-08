@@ -29,14 +29,17 @@
     <div style="font-size: 0.8rem; color: #555; background: #fff3e0; border-left: 4px solid var(--primary); padding: 10px; margin-bottom: 20px; line-height: 1.5; border-radius: 4px;">
         📌 <b>Lưu ý từ K&G:</b><br>
         • Danh sách nhân sự cần vài giây để hiển thị.<br>
-        • Vui lòng chờ file video tải xong 100% trước khi thoát.
+        • Hệ thống đã tối ưu cho file lớn (Video/Audio) nộp trực tiếp.<br>
+        • Vui lòng chờ thanh tiến trình chạy hết 100% để được ghi nhận.
     </div>
+    
     <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
     <div class="form-group"><label>2. Khu vực/Phòng ban/Quản lý:</label><select id="pbc2"></select></div>
     <div class="form-group"><label>3. Thông tin nhân sự THỰC HIỆN chia sẻ:</label><select id="nhanSu"></select></div>
     <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
     <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung chính..."></textarea></div>
     <div class="form-group"><label>6. File đính kèm (Dưới 1,5GB):</label><input type="file" id="fileInput"></div>
+    
     <div class="form-group">
         <label>7. Tự phân loại và đánh giá nội dung chia sẻ:</label>
         <select id="phanLoai">
@@ -47,15 +50,18 @@
             <option value="4. Bình thường - ghi nhận">4. Bình thường - ghi nhận</option>
         </select>
     </div>
+    
     <div id="progressContainer"><div id="progressBar"></div></div>
+    
     <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
     <a href="../index.html" class="back-home">⬅ Quay lại trang chủ Hub</a>
+    
     <div class="footer-text">Hệ thống thông tin Learn & Share - Aristino Academy</div>
 </div>
 
 <script>
-    // DÁN LINK WEB APP CỦA BẠN VÀO ĐÂY
-    const API_URL = "https://script.google.com/macros/s/AKfycbxxW17BtmZKzgOJwj4wyNBQkcRFLYCuMTj6Qj8MbtxOwOHRfNBP-y7ZmXxJ-9ERd2iznQ/exec";
+    // THAY LINK WEB APP MỚI CỦA BẠN VÀO ĐÂY
+    const API_URL = "https://script.google.com/macros/s/AKfycbyRQV-W7oUMO2-h0LlSYitibFhvqXtik3vN8ThsaNOH3OIUUNGgknMFtuIxVTR77pRseA/exec";
     let allData = [];
     let ss1, ss2, ss3;
 
@@ -81,7 +87,7 @@
         if (!val) return ss3.setData([{text: '-- Chọn --', value: ''}]);
         const pbc1Val = document.getElementById('pbc1').value;
         const list3 = [...new Set(allData.filter(r => r[0] === pbc1Val && r[1] === val).map(r => r[2]))].filter(String).sort();
-        ss3.setData([{text: '-- Chọn tên mình --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
+        ss3.setData([{text: '-- Chọn đúng tên --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
     }
 
     function calculateMD5(file) {
@@ -123,50 +129,68 @@
         document.getElementById('progressContainer').style.display = 'block';
 
         try {
+            // 1. Tính mã vân tay MD5
             const md5 = await calculateMD5(file);
-            btn.innerText = "ĐANG GHI NHẬN LOG...";
+            btn.innerText = "ĐANG XIN VÉ UPLOAD...";
             
+            // 2. Ghi log và lấy AccessToken + UploadURL từ Apps Script
             const initRes = await fetch(API_URL, { 
                 method: 'POST', 
                 body: JSON.stringify({ 
-                    fileName: file.name, fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
+                    fileName: file.name, 
+                    fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
                     pbc1: fields.pbc1, pbc2: fields.pbc2, nhanSu: fields.nhanSu,
                     ngayChiaSe: fields.ngay, noiDungChinh: fields.noiDung, phanLoai: fields.phanLoai, md5: md5
                 }) 
             });
             const config = await initRes.json();
-            if (!config.uploadUrl) throw new Error("Khởi tạo thất bại.");
+            if (!config.uploadUrl || !config.accessToken) throw new Error("Không thể khởi tạo đường truyền Drive.");
 
-            // Tải file dùng XHR (để theo dõi % chính xác nhất cho file lớn)
+            // 3. Tải trực tiếp lên Drive bằng XHR kèm Authorization Header (Vượt CORS)
             const xhr = new XMLHttpRequest();
             xhr.open("PUT", config.uploadUrl, true);
             
+            // Header quan trọng để Google chấp nhận request từ GitHub
+            xhr.setRequestHeader("Authorization", "Bearer " + config.accessToken);
+
             xhr.upload.onprogress = (e) => {
                 if (e.lengthComputable) {
                     const pct = Math.round((e.loaded / e.total) * 100);
                     bar.style.width = pct + '%';
-                    btn.innerText = `ĐANG TẢI: ${pct}%`;
+                    btn.innerText = `ĐANG TẢI TRỰC TIẾP: ${pct}%`;
                 }
             };
 
             xhr.onload = async () => {
                 if (xhr.status === 200 || xhr.status === 201) {
                     const fileId = JSON.parse(xhr.response).id;
-                    btn.innerText = "ĐANG HOÀN TẤT...";
+                    btn.innerText = "ĐANG GẮN LINK...";
+                    
+                    // Xác nhận hoàn tất để cập nhật link vào Sheet
                     await fetch(API_URL, {
                         method: 'POST',
                         body: JSON.stringify({ action: 'finishUpload', row: config.row, fileId: fileId })
                     });
-                    alert("CHÚC MỪNG! THÀNH CÔNG.");
+                    
+                    alert("CHÚC MỪNG! BÁO CÁO VÀ FILE ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
                     window.location.href = "../index.html";
                 } else {
-                    alert("Lỗi tải file lên Drive (Mã: " + xhr.status + "). Admin đã ghi nhận thông tin chữ.");
+                    alert("Lỗi tải Drive (Mã: " + xhr.status + "). Vui lòng thử lại.");
+                    btn.disabled = false;
                 }
             };
+
+            xhr.onerror = () => {
+                alert("Lỗi kết nối mạng. Hãy kiểm tra đường truyền.");
+                btn.disabled = false;
+            };
+
             xhr.send(file);
+            
         } catch (err) {
             alert("Lỗi hệ thống: " + err.message);
             btn.disabled = false;
+            btn.innerText = "GỬI BÁO CÁO";
         }
     }
 </script>
