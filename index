@@ -62,7 +62,7 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbx1IuD2A4_E2cbjtzdbqWm8HZ5hH7TwvyzM0p0qf9LWzEdHbA6L7V8HmXDmwuXEH33F1w/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbw--r3WUsMv8075vnQQJvMuDepzB-K9MrBzwWZVCwFmxKn-J2V7KBAkxeXi5462gcG6mg/exec";
     let allData = [];
     let ss1, ss2, ss3;
 
