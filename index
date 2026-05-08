@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>L&S Báo Cáo | Aristino Academy</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
+    
+    <style>
+        :root { --primary: #FB8C00; --green: #1D713A; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #f2f2f2; padding: 10px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        .container { width: 100%; max-width: 480px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-top: 20px; }
+        h2 { color: var(--green); text-align: center; margin-bottom: 20px; font-size: 1.5rem; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; }
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.85rem; color: #444; }
+        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        #progressContainer { display: none; margin: 20px 0; background: #eee; border-radius: 10px; height: 12px; overflow: hidden; }
+        #progressBar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s; }
+        #btnSubmit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; margin-bottom: 15px; }
+        #btnSubmit:disabled { background: #ccc; cursor: not-allowed; }
+        .back-home { display: block; text-align: center; color: var(--green); text-decoration: none; font-weight: bold; font-size: 0.9rem; margin-top: 10px; }
+        .footer-text { text-align: center; margin-top: 20px; color: #999; font-size: 0.75rem; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>L&S - BÁO CÁO CHIA SẺ</h2>
+
+    <div style="font-size: 0.8rem; color: #555; background: #fff3e0; border-left: 4px solid var(--primary); padding: 10px; margin-bottom: 20px; line-height: 1.5; border-radius: 4px;">
+        📌 <b>Lưu ý từ K&G:</b><br>
+        • Danh sách nhân sự (Mục 1, 2, 3) cần vài giây để hiển thị.<br>
+        • Hệ thống mới tự động tối ưu đường truyền cho file video lớn.<br>
+        • Ghi nhận tri thức: Học viện trân trọng mọi đóng góp.
+    </div>
+    
+    <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
+    <div class="form-group"><label>2. Khu vực/Phòng ban/Quản lý:</label><select id="pbc2"></select></div>
+    <div class="form-group"><label>3. Thông tin nhân sự THỰC HIỆN chia sẻ:</label><select id="nhanSu"></select></div>
+    <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
+    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung chính..."></textarea></div>
+    <div class="form-group"><label>6. File đính kèm (Video/audio không quá 1,5GB):</label><input type="file" id="fileInput"></div>
+    
+    <div class="form-group">
+        <label>7. Tự phân loại và đánh giá nội dung chia sẻ:</label>
+        <select id="phanLoai">
+            <option value="">-- Chọn đánh giá --</option>
+            <option value="1. Dữ liệu nội bộ cần bảo mật">1. Dữ liệu nội bộ cần bảo mật</option>
+            <option value="2. Xuất sắc, cần lan tỏa">2. Xuất sắc, cần lan tỏa</option>
+            <option value="3. Hữu ích - Có giá trị tham khảo">3. Hữu ích - Có giá trị tham khảo</option>
+            <option value="4. Bình thường - ghi nhận chia sẻ">4. Bình thường - ghi nhận chia sẻ</option>
+        </select>
+    </div>
+    
+    <div id="progressContainer"><div id="progressBar"></div></div>
+    
+    <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
+    <a href="../index.html" class="back-home">⬅ Quay lại trang chủ Hub</a>
+    
+    <div class="footer-text">Hệ thống thông tin Learn & Share - Aristino Academy</div>
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbx1IuD2A4_E2cbjtzdbqWm8HZ5hH7TwvyzM0p0qf9LWzEdHbA6L7V8HmXDmwuXEH33F1w/exec";
+    let allData = [];
+    let ss1, ss2, ss3;
+
+    // Load danh mục khi trang sẵn sàng
+    window.onload = async () => {
+        ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Chọn Kênh/Khối' }, events: { afterChange: v => updatePBC2(v[0].value) } });
+        ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Chọn Phòng ban' }, events: { afterChange: v => updateNhanSu(v[0].value) } });
+        ss3 = new SlimSelect({ select: '#nhanSu', settings: { placeholderText: 'Tìm tên hoặc mã NV...' } });
+
+        try {
+            const res = await fetch(`${API_URL}?action=getDanhMuc`);
+            allData = await res.json();
+            const list1 = [...new Set(allData.map(r => r[0]))].filter(String).sort();
+            ss1.setData([{text: '-- Chọn Kênh --', value: ''}, ...list1.map(i => ({text: i, value: i}))]);
+        } catch (e) {
+            console.log("Lỗi tải danh mục");
+        }
+    };
+
+    function updatePBC2(val) {
+        if (!val) return ss2.setData([{text: '-- Chọn --', value: ''}]);
+        const list2 = [...new Set(allData.filter(r => r[0] === val).map(r => r[1]))].filter(String).sort();
+        ss2.setData([{text: '-- Chọn Phòng ban --', value: ''}, ...list2.map(i => ({text: i, value: i}))]);
+    }
+
+    function updateNhanSu(val) {
+        if (!val) return ss3.setData([{text: '-- Chọn --', value: ''}]);
+        const pbc1Val = document.getElementById('pbc1').value;
+        const list3 = [...new Set(allData.filter(r => r[0] === pbc1Val && r[1] === val).map(r => r[2]))].filter(String).sort();
+        ss3.setData([{text: '-- Chọn đúng tên mình để được ghi nhận --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
+    }
+
+    // Hàm tính MD5 tối ưu (Xử lý theo Chunk để không treo trình duyệt)
+    function calculateMD5(file) {
+        return new Promise((resolve) => {
+            const spark = new SparkMD5.ArrayBuffer();
+            const reader = new FileReader();
+            const chunkSize = 10 * 1024 * 1024; // 10MB mỗi lần đọc
+            let cursor = 0;
+            reader.onload = (e) => {
+                spark.append(e.target.result);
+                cursor += chunkSize;
+                if (cursor < file.size) readNext();
+                else resolve(spark.end());
+            };
+            const readNext = () => reader.readAsArrayBuffer(file.slice(cursor, cursor + chunkSize));
+            readNext();
+        });
+    }
+
+    async function handleUpload() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+        const btn = document.getElementById('btnSubmit');
+        const bar = document.getElementById('progressBar');
+        
+        // Thu thập dữ liệu form
+        const nhanSu = document.getElementById('nhanSu').value;
+        const ngay = document.getElementById('ngay').value;
+        const noiDung = document.getElementById('noiDung').value.trim();
+        const phanLoai = document.getElementById('phanLoai').value;
+        const pbc1 = document.getElementById('pbc1').value;
+        const pbc2 = document.getElementById('pbc2').value;
+
+        if(!file || !nhanSu || !ngay || !noiDung || !phanLoai) {
+            return alert("Vui lòng điền đầy đủ thông tin từ mục 1 đến mục 7!");
+        }
+
+        btn.disabled = true;
+        btn.innerText = "ĐANG TÍNH TOÁN MD5...";
+        document.getElementById('progressContainer').style.display = 'block';
+
+        try {
+            // 1. Bước 1: Tính MD5 (Kiểm tra gian lận/trùng file)
+            const md5 = await calculateMD5(file);
+
+            btn.innerText = "ĐANG GHI GHI LOG...";
+            
+            // 2. Bước 2: Gửi thông tin chữ về Apps Script (Ghi log trước)
+            const initRes = await fetch(API_URL, { 
+                method: 'POST', 
+                body: JSON.stringify({ 
+                    fileName: file.name,
+                    fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
+                    pbc1: pbc1,
+                    pbc2: pbc2,
+                    nhanSu: nhanSu,
+                    ngayChiaSe: ngay,
+                    noiDungChinh: noiDung,
+                    phanLoai: phanLoai,
+                    md5: md5
+                }) 
+            });
+            
+            const config = await initRes.json();
+            if (config.error || !config.uploadUrl) throw new Error(config.error || "Lỗi khởi tạo luồng tải.");
+
+            // 3. Bước 3: Tải file trực tiếp lên Google Drive (Cân bằng tải)
+            const xhr = new XMLHttpRequest();
+            xhr.open("PUT", config.uploadUrl, true);
+            
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    bar.style.width = pct + '%';
+                    btn.innerText = `ĐANG TẢI FILE: ${pct}%`;
+                }
+            };
+
+            xhr.onload = async () => {
+                if (xhr.status === 200 || xhr.status === 201) {
+                    const fileId = JSON.parse(xhr.response).id;
+                    
+                    // Bước 4: Xác nhận hoàn tất để hệ thống gắn link file vào Sheet
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'finishUpload', row: config.row, fileId: fileId })
+                    });
+
+                    alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
+                    window.location.href = "../index.html";
+                } else {
+                    alert("Lỗi tải file lên Drive. Tuy nhiên thông tin chữ đã được lưu lại.");
+                    btn.disabled = false;
+                }
+            };
+
+            xhr.onerror = () => {
+                alert("Lỗi kết nối mạng. Vui lòng kiểm tra lại đường truyền.");
+                btn.disabled = false;
+            };
+
+            xhr.send(file);
+            
+        } catch (err) {
+            alert("Đã xảy ra lỗi: " + err.message);
+            btn.disabled = false;
+            btn.innerText = "GỬI LẠI BÁO CÁO";
+        }
+    }
+</script>
+</body>
+</html>
