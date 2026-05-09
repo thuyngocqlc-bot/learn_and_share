@@ -29,30 +29,33 @@
         📌 <b>Lưu ý từ K&G:</b><br>
         • Danh sách nhân sự (Mục 1, 2, 3) cần vài giây để hiển thị.<br>
         • Với file trên 1GB, vui lòng kiên nhẫn chờ thanh tiến trình chạy hết.<br>
-        • Ghi nhận tri thức: Học viện trân trọng mọi đóng góp.
+        • Vui lòng chờ file tải xong 100% trước khi thoát trang.
     </div>
     
     <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
     <div class="form-group"><label>2. Khu vực/Phòng ban/Quản lý:</label><select id="pbc2"></select></div>
     <div class="form-group"><label>3. Nhân sự chia sẻ:</label><select id="nhanSu"></select></div>
     <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
-    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3"></textarea></div>
-    <div class="form-group"><label>6. File đính kèm (Dưới 1,5GB):</label><input type="file" id="fileInput"></div>
-    <div class="form-group"><label>7. Đánh giá:</label><select id="phanLoai">
-        <option value="">-- Chọn --</option>
+    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung..."></textarea></div>
+    <div class="form-group"><label>6. File đính kèm:</label><input type="file" id="fileInput"></div>
+    <div class="form-group">
+        <label>7. Đánh giá:</label>
+        <select id="phanLoai">
+            <option value="">-- Chọn đánh giá --</option>
             <option value="1. Dữ liệu nội bộ bảo mật">1. Dữ liệu nội bộ bảo mật</option>
             <option value="2. Xuất sắc, cần lan tỏa">2. Xuất sắc, cần lan tỏa</option>
             <option value="3. Hữu ích - Tham khảo">3. Hữu ích - Tham khảo</option>
             <option value="4. Bình thường - ghi nhận">4. Bình thường - ghi nhận</option>
-    </select></div>
+        </select>
+    </div>
 
     <div id="progressContainer"><div id="progressBar"></div></div>
     <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
-    <a href="../index.html" class="back-home">⬅ Quay lại Hub</a>
+    <a href="../index.html" class="back-home">⬅ Quay lại trang chủ Hub</a>
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbziiEVYWfgYGvac0Q_2w-1b-CuYqxZvXnevv29ItbwOvJ0rfghkx818YFXuVpIz8PM_bg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyc_xl3mzFqL-4kZaoeylsS63Ujr_XInV-02X6BDLcw_nBW9hviVPvSu8e8MDHu0GqCFQ/exec";
     let allData = [];
     let ss1, ss2, ss3;
 
@@ -65,7 +68,7 @@
             allData = await res.json();
             const list1 = [...new Set(allData.map(r => r[0]))].filter(String).sort();
             ss1.setData([{text: '-- Chọn --', value: ''}, ...list1.map(i => ({text: i, value: i}))]);
-        } catch (e) { console.error("Lỗi tải danh mục"); }
+        } catch (e) { console.error("Lỗi danh mục"); }
         
         document.getElementById('pbc1').addEventListener('change', (e) => {
             const val = e.target.value;
@@ -77,20 +80,33 @@
             const val = e.target.value;
             const p1 = document.getElementById('pbc1').value;
             const list3 = [...new Set(allData.filter(r => r[0] === p1 && r[1] === val).map(r => r[2]))].filter(String).sort();
-            ss3.setData([{text: '-- Chọn tên --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
+            ss3.setData([{text: '-- Chọn đúng tên --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
         });
     };
 
-    function calculateMD5(file) {
-        return new Promise((resolve) => {
-            const spark = new SparkMD5.ArrayBuffer();
-            const reader = new FileReader();
-            const chunkSize = 10 * 1024 * 1024;
-            let cursor = 0;
-            reader.onload = (e) => { spark.append(e.target.result); cursor += chunkSize; if (cursor < file.size) readNext(); else resolve(spark.end()); };
-            const readNext = () => reader.readAsArrayBuffer(file.slice(cursor, cursor + chunkSize));
-            readNext();
-        });
+    // Thuật toán Partial MD5: Băm 1MB đầu, giữa và cuối. Tốc độ < 500ms cho file 1.5GB
+    async function calculatePartialMD5(file) {
+        const spark = new SparkMD5.ArrayBuffer();
+        const size = file.size;
+        const chunkSize = 1024 * 1024; // 1MB
+
+        const readChunk = (start) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                const blob = file.slice(start, start + chunkSize);
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsArrayBuffer(blob);
+            });
+        };
+
+        spark.append(await readChunk(0)); // Chunk đầu
+        if (size > chunkSize * 2) {
+            spark.append(await readChunk(Math.floor(size / 2))); // Chunk giữa
+        }
+        if (size > chunkSize) {
+            spark.append(await readChunk(size - chunkSize)); // Chunk cuối
+        }
+        return spark.end() + "_" + size; // Kết hợp với dung lượng file
     }
 
     async function handleUpload() {
@@ -110,18 +126,21 @@
         if(!file || !f.nhanSu || !f.ngay || !f.noiDung || !f.phanLoai) return alert("Vui lòng điền đủ thông tin!");
 
         btn.disabled = true;
-        btn.innerText = "ĐANG TÍNH MD5...";
+        btn.innerText = "QUÉT FILE...";
         document.getElementById('progressContainer').style.display = 'block';
 
         try {
-            const md5 = await calculateMD5(file);
-            btn.innerText = "ĐANG GHI LOG...";
+            const partialMd5 = await calculatePartialMD5(file);
+            btn.innerText = "GHI LOG...";
             
             const initRes = await fetch(API_URL, { 
                 method: 'POST', 
                 body: JSON.stringify({ 
-                    fileName: file.name, fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
-                    pbc1: f.pbc1, pbc2: f.pbc2, nhanSu: f.nhanSu, ngayChiaSe: f.ngay, noiDungChinh: f.noiDung, phanLoai: f.phanLoai, md5: md5
+                    fileName: file.name, 
+                    fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
+                    pbc1: f.pbc1, pbc2: f.pbc2, nhanSu: f.nhanSu, 
+                    ngayChiaSe: f.ngay, noiDungChinh: f.noiDung, 
+                    phanLoai: f.phanLoai, partialMd5: partialMd5 
                 }) 
             });
             const config = await initRes.json();
@@ -139,35 +158,33 @@
             };
 
             const finalize = async (fId) => {
-                btn.innerText = "HOÀN TẤT...";
+                btn.innerText = "XÁC NHẬN...";
                 await fetch(API_URL, { 
                     method: 'POST', 
                     body: JSON.stringify({ action: 'finishUpload', row: config.row, fileId: fId }) 
                 });
-                alert("CHÚC MỪNG! BÁO CÁO LERN & SHARE ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
+                alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
                 window.location.href = "../index.html";
             };
 
             xhr.onload = () => {
                 let fId = "";
                 try { fId = JSON.parse(xhr.response).id; } catch(e) {}
-                // Chấp nhận cả status 0, 200, 201 nếu đã xong bytes
                 if (xhr.status === 200 || xhr.status === 201 || xhr.status === 0) {
                     finalize(fId);
                 } else {
-                    alert("Lỗi server Drive: " + xhr.status);
+                    alert("Lỗi tải Drive: " + xhr.status);
                     btn.disabled = false;
                 }
             };
 
             xhr.onerror = () => {
-                // Kiểm tra: Nếu thanh progress đã 100% thì onerror chỉ là lỗi CORS phản hồi.
                 if (bar.style.width === '100%') {
                     finalize("");
                 } else {
-                    alert("LỖI MẠNG: Tải file bị ngắt quãng. Vui lòng nộp lại!");
+                    alert("LỖI MẠNG: Vui lòng nộp lại!");
                     btn.disabled = false;
-                    btn.innerText = "GỬI LẠI BÁO CÁO";
+                    btn.innerText = "GỬI LẠI";
                 }
             };
 
