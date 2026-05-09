@@ -2,60 +2,46 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>L&S Báo Cáo | Aristino Academy</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/slim-select/2.8.2/slimselect.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
     <style>
         :root { --primary: #FB8C00; --green: #1D713A; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: #f2f2f2; padding: 10px; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
-        .container { width: 100%; max-width: 480px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-top: 20px; }
-        h2 { color: var(--green); text-align: center; margin-bottom: 20px; font-size: 1.5rem; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; }
+        body { font-family: system-ui, sans-serif; background: #f2f2f2; padding: 10px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 480px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 15px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.85rem; color: #444; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; font-size: 0.85rem; }
         input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         #progressContainer { display: none; margin: 20px 0; background: #eee; border-radius: 10px; height: 12px; overflow: hidden; }
         #progressBar { width: 0%; height: 100%; background: var(--primary); transition: width 0.3s; }
-        #btnSubmit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; margin-bottom: 15px; }
-        #btnSubmit:disabled { background: #ccc; cursor: not-allowed; }
-        .back-home { display: block; text-align: center; color: var(--green); text-decoration: none; font-weight: bold; font-size: 0.9rem; margin-top: 10px; }
+        #btnSubmit { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        #btnSubmit:disabled { background: #ccc; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2>L&S - BÁO CÁO CHIA SẺ</h2>
-    <div style="font-size: 0.8rem; color: #555; background: #fff3e0; border-left: 4px solid var(--primary); padding: 10px; margin-bottom: 20px; border-radius: 4px;">
-        📌 <b>Lưu ý từ K&G:</b><br>
-        • Danh sách nhân sự (Mục 1, 2, 3) cần vài giây để hiển thị.<br>
-        • Với file trên 1GB, vui lòng kiên nhẫn chờ thanh tiến trình chạy hết.<br>
-        • Vui lòng chờ file tải xong 100% trước khi thoát trang.
-    </div>
-    
+    <h2 style="color:var(--green); text-align:center;">L&S - BÁO CÁO CHIA SẺ</h2>
     <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
-    <div class="form-group"><label>2. Khu vực/Phòng ban/Quản lý:</label><select id="pbc2"></select></div>
+    <div class="form-group"><label>2. Khu vực/Phòng ban:</label><select id="pbc2"></select></div>
     <div class="form-group"><label>3. Nhân sự chia sẻ:</label><select id="nhanSu"></select></div>
-    <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
-    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung..."></textarea></div>
-    <div class="form-group"><label>6. File đính kèm:</label><input type="file" id="fileInput"></div>
-    <div class="form-group">
-        <label>7. Đánh giá:</label>
-        <select id="phanLoai">
-            <option value="">-- Chọn đánh giá --</option>
-            <option value="1. Dữ liệu nội bộ bảo mật">1. Dữ liệu nội bộ bảo mật</option>
-            <option value="2. Xuất sắc, cần lan tỏa">2. Xuất sắc, cần lan tỏa</option>
-            <option value="3. Hữu ích - Tham khảo">3. Hữu ích - Tham khảo</option>
-            <option value="4. Bình thường - ghi nhận">4. Bình thường - ghi nhận</option>
-        </select>
-    </div>
-
+    <div class="form-group"><label>4. Ngày chia sẻ:</label><input type="date" id="ngay"></div>
+    <div class="form-group"><label>5. Nội dung:</label><textarea id="noiDung" rows="3"></textarea></div>
+    <div class="form-group"><label>6. File (Video/Audio):</label><input type="file" id="fileInput"></div>
+    <div class="form-group"><label>7. Đánh giá:</label><select id="phanLoai">
+        <option value="">-- Chọn --</option>
+        <option value="1. Bảo mật">1. Bảo mật</option>
+        <option value="2. Xuất sắc">2. Xuất sắc</option>
+        <option value="3. Hữu ích">3. Hữu ích</option>
+        <option value="4. Bình thường">4. Bình thường</option>
+    </select></div>
     <div id="progressContainer"><div id="progressBar"></div></div>
     <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
-    <a href="../index.html" class="back-home">⬅ Quay lại trang chủ Hub</a>
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyc_xl3mzFqL-4kZaoeylsS63Ujr_XInV-02X6BDLcw_nBW9hviVPvSu8e8MDHu0GqCFQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyZfn1wk8t1yFphK3URt3bCo_sIyiynCm9fdLWjiPs6beQjioobs13m5KAOS4nZnIkHKw/exec";
     let allData = [];
     let ss1, ss2, ss3;
 
@@ -68,131 +54,81 @@
             allData = await res.json();
             const list1 = [...new Set(allData.map(r => r[0]))].filter(String).sort();
             ss1.setData([{text: '-- Chọn --', value: ''}, ...list1.map(i => ({text: i, value: i}))]);
-        } catch (e) { console.error("Lỗi danh mục"); }
+        } catch (e) { console.error("CORS/Network Error"); }
         
         document.getElementById('pbc1').addEventListener('change', (e) => {
-            const val = e.target.value;
-            const list2 = [...new Set(allData.filter(r => r[0] === val).map(r => r[1]))].filter(String).sort();
+            const list2 = [...new Set(allData.filter(r => r[0] === e.target.value).map(r => r[1]))].filter(String).sort();
             ss2.setData([{text: '-- Chọn --', value: ''}, ...list2.map(i => ({text: i, value: i}))]);
         });
-        
         document.getElementById('pbc2').addEventListener('change', (e) => {
-            const val = e.target.value;
-            const p1 = document.getElementById('pbc1').value;
-            const list3 = [...new Set(allData.filter(r => r[0] === p1 && r[1] === val).map(r => r[2]))].filter(String).sort();
-            ss3.setData([{text: '-- Chọn đúng tên --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
+            const list3 = [...new Set(allData.filter(r => r[0] === document.getElementById('pbc1').value && r[1] === e.target.value).map(r => r[2]))].filter(String).sort();
+            ss3.setData([{text: '-- Chọn tên --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
         });
     };
 
-    // Thuật toán Partial MD5: Băm 1MB đầu, giữa và cuối. Tốc độ < 500ms cho file 1.5GB
     async function calculatePartialMD5(file) {
         const spark = new SparkMD5.ArrayBuffer();
         const size = file.size;
-        const chunkSize = 1024 * 1024; // 1MB
-
-        const readChunk = (start) => {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                const blob = file.slice(start, start + chunkSize);
-                reader.onload = (e) => resolve(e.target.result);
-                reader.readAsArrayBuffer(blob);
-            });
-        };
-
-        spark.append(await readChunk(0)); // Chunk đầu
-        if (size > chunkSize * 2) {
-            spark.append(await readChunk(Math.floor(size / 2))); // Chunk giữa
-        }
-        if (size > chunkSize) {
-            spark.append(await readChunk(size - chunkSize)); // Chunk cuối
-        }
-        return spark.end() + "_" + size; // Kết hợp với dung lượng file
+        const chunkSize = 1024 * 1024;
+        const read = (start) => new Promise(res => {
+            const r = new FileReader();
+            r.onload = (e) => res(e.target.result);
+            r.readAsArrayBuffer(file.slice(start, start + chunkSize));
+        });
+        spark.append(await read(0));
+        if (size > chunkSize * 2) spark.append(await read(Math.floor(size / 2)));
+        if (size > chunkSize) spark.append(await read(size - chunkSize));
+        return spark.end() + "_" + size;
     }
 
     async function handleUpload() {
-        const fileInput = document.getElementById('fileInput');
-        const file = fileInput.files[0];
+        const file = document.getElementById('fileInput').files[0];
         const btn = document.getElementById('btnSubmit');
         const bar = document.getElementById('progressBar');
         const f = {
             nhanSu: document.getElementById('nhanSu').value,
             ngay: document.getElementById('ngay').value,
-            noiDung: document.getElementById('noiDung').value.trim(),
+            noiDung: document.getElementById('noiDung').value,
             phanLoai: document.getElementById('phanLoai').value,
             pbc1: document.getElementById('pbc1').value,
             pbc2: document.getElementById('pbc2').value
         };
 
-        if(!file || !f.nhanSu || !f.ngay || !f.noiDung || !f.phanLoai) return alert("Vui lòng điền đủ thông tin!");
-
+        if(!file || !f.nhanSu || !f.ngay) return alert("Thiếu thông tin!");
         btn.disabled = true;
-        btn.innerText = "QUÉT FILE...";
         document.getElementById('progressContainer').style.display = 'block';
 
         try {
-            const partialMd5 = await calculatePartialMD5(file);
-            btn.innerText = "GHI LOG...";
-            
-            const initRes = await fetch(API_URL, { 
-                method: 'POST', 
-                body: JSON.stringify({ 
-                    fileName: file.name, 
-                    fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
-                    pbc1: f.pbc1, pbc2: f.pbc2, nhanSu: f.nhanSu, 
-                    ngayChiaSe: f.ngay, noiDungChinh: f.noiDung, 
-                    phanLoai: f.phanLoai, partialMd5: partialMd5 
-                }) 
-            });
-            const config = await initRes.json();
+            const pMd5 = await calculatePartialMD5(file);
+            const init = await fetch(API_URL, { method: 'POST', body: JSON.stringify({...f, fileName: file.name, fileSize: (file.size/1024/1024).toFixed(2)+" MB", partialMd5: pMd5}) });
+            const config = await init.json();
 
             const xhr = new XMLHttpRequest();
             xhr.open("PUT", config.uploadUrl, true);
             xhr.setRequestHeader("Authorization", "Bearer " + config.accessToken);
-
-            xhr.upload.onprogress = (e) => {
-                if (e.lengthComputable) {
-                    const pct = Math.round((e.loaded / e.total) * 100);
-                    bar.style.width = pct + '%';
-                    btn.innerText = `ĐANG TẢI: ${pct}%`;
-                }
+            
+            const finalize = async (fId) => {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'finishUpload', row: config.row, fileId: fId }) });
+                alert("THÀNH CÔNG!");
+                window.location.reload();
             };
 
-            const finalize = async (fId) => {
-                btn.innerText = "XÁC NHẬN...";
-                await fetch(API_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'finishUpload', row: config.row, fileId: fId }) 
-                });
-                alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
-                window.location.href = "../index.html";
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) bar.style.width = Math.round((e.loaded / e.total) * 100) + '%';
             };
 
             xhr.onload = () => {
-                let fId = "";
-                try { fId = JSON.parse(xhr.response).id; } catch(e) {}
-                if (xhr.status === 200 || xhr.status === 201 || xhr.status === 0) {
-                    finalize(fId);
-                } else {
-                    alert("Lỗi tải Drive: " + xhr.status);
-                    btn.disabled = false;
-                }
+                let fId = ""; try { fId = JSON.parse(xhr.response).id; } catch(e){}
+                if (xhr.status === 200 || xhr.status === 201 || xhr.status === 0) finalize(fId);
             };
 
             xhr.onerror = () => {
-                if (bar.style.width === '100%') {
-                    finalize("");
-                } else {
-                    alert("LỖI MẠNG: Vui lòng nộp lại!");
-                    btn.disabled = false;
-                    btn.innerText = "GỬI LẠI";
-                }
+                if (bar.style.width === '100%') finalize("");
+                else alert("Lỗi mạng!");
             };
 
             xhr.send(file);
-        } catch (err) {
-            alert("Lỗi: " + err.message);
-            btn.disabled = false;
-        }
+        } catch (e) { alert(e.message); btn.disabled = false; }
     }
 </script>
 </body>
