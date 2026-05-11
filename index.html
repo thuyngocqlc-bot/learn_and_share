@@ -26,21 +26,23 @@
 <body>
 <div class="container">
     <h2>L&S - BÁO CÁO CHIA SẺ</h2>
+
     <div style="font-size: 0.8rem; color: #555; background: #fff3e0; border-left: 4px solid var(--primary); padding: 10px; margin-bottom: 20px; line-height: 1.5; border-radius: 4px;">
-        📌 <b>Lưu ý từ Aristino:</b><br>
-        • Danh sách nhân sự được tối ưu hóa hiển thị nhanh.<br>
-        • Đã nâng cấp thuật toán Partial MD5 cho file > 1GB.<br>
-        • Vui lòng chờ file tải xong 100% trước khi thoát trang.
+        📌 <b>Lưu ý từ K&G:</b><br>
+        • Danh sách nhân sự (Mục 1, 2, 3) cần vài giây để hiển thị.<br>
+        • Với file trên 1GB, vui lòng kiên nhẫn chờ thanh tiến trình chạy hết.<br>
+        • Ghi nhận tri thức: Học viện trân trọng mọi đóng góp.
     </div>
     
     <div class="form-group"><label>1. Kênh/Khối:</label><select id="pbc1"></select></div>
     <div class="form-group"><label>2. Khu vực/Phòng ban/Quản lý:</label><select id="pbc2"></select></div>
     <div class="form-group"><label>3. Thông tin nhân sự THỰC HIỆN chia sẻ:</label><select id="nhanSu"></select></div>
     <div class="form-group"><label>4. Ngày chia sẻ thực tế:</label><input type="date" id="ngay"></div>
-    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung..."></textarea></div>
-    <div class="form-group"><label>6. File đính kèm (Video/Audio):</label><input type="file" id="fileInput"></div>
+    <div class="form-group"><label>5. Nội dung chính:</label><textarea id="noiDung" rows="3" placeholder="Tóm tắt nội dung chính..."></textarea></div>
+    <div class="form-group"><label>6. File đính kèm (Video/audio không quá 1,5GB):</label><input type="file" id="fileInput"></div>
+    
     <div class="form-group">
-        <label>7. Đánh giá nội dung:</label>
+        <label>7. Tự phân loại và đánh giá nội dung chia sẻ:</label>
         <select id="phanLoai">
             <option value="">-- Chọn đánh giá --</option>
             <option value="1. Dữ liệu nội bộ cần bảo mật">1. Dữ liệu nội bộ cần bảo mật</option>
@@ -49,16 +51,17 @@
             <option value="4. Bình thường - ghi nhận chia sẻ">4. Bình thường - ghi nhận chia sẻ</option>
         </select>
     </div>
-
+    
     <div id="progressContainer"><div id="progressBar"></div></div>
+    
     <button id="btnSubmit" onclick="handleUpload()">GỬI BÁO CÁO</button>
     <a href="../index.html" class="back-home">⬅ Quay lại trang chủ Hub</a>
-    <div class="footer-text">Learn & Share - Aristino Academy</div>
+    <div class="footer-text">Hệ thống thông tin Learn & Share - Aristino Academy</div>
 </div>
 
 <script>
-    // URL Web App giữ nguyên theo cấu trúc của bạn
-    const API_URL = "https://script.google.com/macros/s/AKfycbxBDE3_wfcs5zsAedGlkhFn8dWw7-xz7SzYG2VHTqS9E7rsSZAyRrpQ8sUpOM1XO5Dryw/exec";
+    // DÁN LINK EXEC CỦA BẠN VÀO ĐÂY
+    const API_URL = "https://script.google.com/macros/s/AKfycbwHSn_LQfaECZw7xJADkIDMd1biB4mSBUgw4qlPBlo5_TZCHTxyOtkN-JBIzFSIuKikDA/exec";
     let allData = [];
     let ss1, ss2, ss3;
 
@@ -66,7 +69,6 @@
         ss1 = new SlimSelect({ select: '#pbc1', settings: { placeholderText: 'Chọn' }, events: { afterChange: v => updatePBC2(v[0].value) } });
         ss2 = new SlimSelect({ select: '#pbc2', settings: { placeholderText: 'Chọn' }, events: { afterChange: v => updateNhanSu(v[0].value) } });
         ss3 = new SlimSelect({ select: '#nhanSu', settings: { placeholderText: 'Tìm nhân viên...' } });
-
         try {
             const res = await fetch(`${API_URL}?action=getDanhMuc`);
             allData = await res.json();
@@ -85,14 +87,14 @@
         if (!val) return ss3.setData([{text: '-- Chọn --', value: ''}]);
         const p1 = document.getElementById('pbc1').value;
         const list3 = [...new Set(allData.filter(r => r[0] === p1 && r[1] === val).map(r => r[2]))].filter(String).sort();
-        ss3.setData([{text: '-- Chọn đúng tên --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
+        ss3.setData([{text: '-- Chọn đúng tên mình --', value: ''}, ...list3.map(i => ({text: i, value: i}))]);
     }
 
-    // Thuật toán Partial MD5 (Băm 3MB thay vì băm cả GB)
+    // PARTIAL MD5: Băm 3MB để xử lý file GB trong 0.5 giây
     async function calculatePartialMD5(file) {
         const spark = new SparkMD5.ArrayBuffer();
         const size = file.size;
-        const chunkSize = 1024 * 1024; // 1MB
+        const chunkSize = 1024 * 1024;
         const read = (s) => new Promise(res => {
             const r = new FileReader();
             r.onload = (e) => res(e.target.result);
@@ -109,33 +111,31 @@
         const file = fileInput.files[0];
         const btn = document.getElementById('btnSubmit');
         const bar = document.getElementById('progressBar');
-        const fields = {
-            pbc1: document.getElementById('pbc1').value,
-            pbc2: document.getElementById('pbc2').value,
+        const f = {
             nhanSu: document.getElementById('nhanSu').value,
             ngay: document.getElementById('ngay').value,
             noiDung: document.getElementById('noiDung').value.trim(),
-            phanLoai: document.getElementById('phanLoai').value
+            phanLoai: document.getElementById('phanLoai').value,
+            pbc1: document.getElementById('pbc1').value,
+            pbc2: document.getElementById('pbc2').value
         };
 
-        if(!file || !fields.nhanSu || !fields.ngay) return alert("Vui lòng điền đủ thông tin!");
+        if(!file || !f.nhanSu || !f.ngay || !f.noiDung || !f.phanLoai) return alert("Vui lòng điền đủ thông tin!");
 
         btn.disabled = true;
+        btn.innerText = "ĐANG QUÉT FILE...";
         document.getElementById('progressContainer').style.display = 'block';
 
         try {
-            btn.innerText = "QUÉT FILE...";
             const pMd5 = await calculatePartialMD5(file);
-
-            btn.innerText = "KẾT NỐI SERVER...";
+            btn.innerText = "ĐANG GHI LOG...";
+            
             const initRes = await fetch(API_URL, { 
                 method: 'POST', 
                 body: JSON.stringify({ 
-                    action: 'initiateUpload', 
-                    fileName: file.name, 
-                    fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
-                    partialMd5: pMd5,
-                    ...fields 
+                    fileName: file.name, fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
+                    pbc1: f.pbc1, pbc2: f.pbc2, nhanSu: f.nhanSu, ngay: f.ngay, noiDung: f.noiDung, 
+                    phanLoai: f.phanLoai, partialMd5: pMd5
                 }) 
             });
             const config = await initRes.json();
@@ -154,11 +154,8 @@
 
             const finalize = async (fId) => {
                 btn.innerText = "XÁC NHẬN...";
-                await fetch(API_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify({ action: 'finishUpload', row: config.row, fileId: fId }) 
-                });
-                alert("CHÚC MỪNG! BÁO CÁO THÀNH CÔNG.");
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'finishUpload', row: config.row, fileId: fId }) });
+                alert("CHÚC MỪNG! BÁO CÁO ĐÃ ĐƯỢC GỬI THÀNH CÔNG.");
                 window.location.href = "../index.html";
             };
 
@@ -166,7 +163,7 @@
                 let fId = "";
                 try { fId = JSON.parse(xhr.response).id; } catch(e) {}
                 if (xhr.status === 200 || xhr.status === 201 || xhr.status === 0) finalize(fId);
-                else { alert("Lỗi tải Drive: " + xhr.status); btn.disabled = false; }
+                else { alert("Lỗi nộp file!"); btn.disabled = false; }
             };
 
             xhr.onerror = () => {
@@ -174,9 +171,7 @@
                 else { alert("Lỗi mạng!"); btn.disabled = false; }
             };
 
-            // Stream file trực tiếp, không nạp RAM
             xhr.send(file);
-
         } catch (err) {
             alert("Lỗi: " + err.message);
             btn.disabled = false;
